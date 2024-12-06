@@ -1,9 +1,8 @@
 import { Module } from '@nestjs/common';
 import { PressureLossService } from './pressure-loss.service';
-import { PressureLossController } from './pressure-loss.controller';
+import { PressureLossGateway } from './pressure-loss.gateway';
 
 @Module({
-  controllers: [PressureLossController],
-  providers: [PressureLossService],
+  providers: [PressureLossGateway, PressureLossService],
 })
 export class PressureLossModule {}

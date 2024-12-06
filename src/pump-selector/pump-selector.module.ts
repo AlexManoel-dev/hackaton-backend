@@ -1,9 +1,8 @@
 import { Module } from '@nestjs/common';
 import { PumpSelectorService } from './pump-selector.service';
-import { PumpSelectorController } from './pump-selector.controller';
+import { PumpSelectorGateway } from './pump-selector.gateway';
 
 @Module({
-  controllers: [PumpSelectorController],
-  providers: [PumpSelectorService],
+  providers: [PumpSelectorGateway, PumpSelectorService],
 })
 export class PumpSelectorModule {}

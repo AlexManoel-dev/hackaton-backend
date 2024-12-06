@@ -1,9 +1,8 @@
 import { Module } from '@nestjs/common';
 import { HeatExchangerService } from './heat-exchanger.service';
-import { HeatExchangerController } from './heat-exchanger.controller';
+import { HeatExchangerGateway } from './heat-exchanger.gateway';
 
 @Module({
-  controllers: [HeatExchangerController],
-  providers: [HeatExchangerService],
+  providers: [HeatExchangerGateway, HeatExchangerService],
 })
 export class HeatExchangerModule {}
