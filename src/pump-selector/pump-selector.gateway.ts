@@ -2,40 +2,64 @@ import {
   WebSocketGateway,
   SubscribeMessage,
   MessageBody,
+  WebSocketServer,
+  ConnectedSocket,
 } from '@nestjs/websockets';
+import { Server, Socket } from 'socket.io';
 import { PumpSelectorService } from './pump-selector.service';
-import { CreatePumpSelectorDto } from './dto/create-pump-selector.dto';
-import { UpdatePumpSelectorDto } from './dto/update-pump-selector.dto';
 
-@WebSocketGateway()
+@WebSocketGateway({
+  namespace: '/pump-selector',
+  cors: {
+    origin: 'http://localhost:4200',
+    methods: ['GET', 'POST'],
+    credentials: true,
+  },
+  pingTimeout: 60000, // Aumente o timeout para 60 segundos
+  pingInterval: 25000,
+})
 export class PumpSelectorGateway {
+  @WebSocketServer()
+  server: Server;
+
   constructor(private readonly pumpSelectorService: PumpSelectorService) {}
 
-  @SubscribeMessage('createPumpSelector')
-  create(@MessageBody() createPumpSelectorDto: CreatePumpSelectorDto) {
-    return this.pumpSelectorService.create(createPumpSelectorDto);
+  handleConnection(client: Socket) {
+    console.log(`Client connected: ${client.id}`);
   }
 
-  @SubscribeMessage('findAllPumpSelector')
-  findAll() {
-    return this.pumpSelectorService.findAll();
+  handleDisconnect(client: Socket) {
+    console.log(`Client disconnected: ${client.id}`);
   }
 
-  @SubscribeMessage('findOnePumpSelector')
-  findOne(@MessageBody() id: number) {
-    return this.pumpSelectorService.findOne(id);
-  }
+  @SubscribeMessage('chat')
+  async handleChat(
+    @MessageBody() message: string,
+    @ConnectedSocket() client: Socket, // Certifique-se de que isso está correto
+  ): Promise<void> {
+    console.log('Mensagem recebida do cliente:', message);
 
-  @SubscribeMessage('updatePumpSelector')
-  update(@MessageBody() updatePumpSelectorDto: UpdatePumpSelectorDto) {
-    return this.pumpSelectorService.update(
-      updatePumpSelectorDto.id,
-      updatePumpSelectorDto,
-    );
-  }
+    try {
+      const responseStream = this.pumpSelectorService.streamResponse(message);
 
-  @SubscribeMessage('removePumpSelector')
-  remove(@MessageBody() id: number) {
-    return this.pumpSelectorService.remove(id);
+      for await (const chunk of responseStream) {
+        if (client?.connected) {
+          client.emit('response', chunk); // Emite cada parte da resposta
+          console.log('Chunk enviado:', chunk);
+        } else {
+          console.error('Cliente desconectado antes de concluir o envio.');
+          break;
+        }
+      }
+
+      if (client?.connected) {
+        client.emit('end', 'Resposta completa');
+      }
+    } catch (error) {
+      console.error('Erro ao processar mensagem:', error);
+      if (client?.connected) {
+        client.emit('error', 'Erro ao processar a mensagem');
+      }
+    }
   }
 }

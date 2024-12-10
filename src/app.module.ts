@@ -4,15 +4,9 @@ import { AppService } from './app.service';
 import { HeatExchangerModule } from './heat-exchanger/heat-exchanger.module';
 import { PressureLossModule } from './pressure-loss/pressure-loss.module';
 import { PumpSelectorModule } from './pump-selector/pump-selector.module';
-import { HeatExchangerGateway } from './heat-exchanger/heat-exchanger.gateway';
 
 @Module({
-  imports: [
-    PressureLossModule,
-    HeatExchangerModule,
-    PumpSelectorModule,
-    HeatExchangerGateway,
-  ],
+  imports: [PressureLossModule, HeatExchangerModule, PumpSelectorModule],
   controllers: [AppController],
   providers: [AppService],
 })

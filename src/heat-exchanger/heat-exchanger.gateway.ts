@@ -2,37 +2,76 @@ import {
   WebSocketGateway,
   WebSocketServer,
   OnGatewayInit,
+  // OnGatewayDestroy,
+  SubscribeMessage,
+  MessageBody,
+  ConnectedSocket,
 } from '@nestjs/websockets';
-import { Server } from 'socket.io';
+import { Logger, OnModuleDestroy } from '@nestjs/common';
+import { Server, Socket } from 'socket.io';
+import { HeatExchangerService } from './heat-exchanger.service';
+import { CalculateHeatExchangerDto } from './dto/calculate-heat-exchanger.dto';
 
 @WebSocketGateway({
+  namespace: '/heat-exchanger',
   cors: {
-    origin: 'http://localhost:4200', // Permita conexões do cliente Angular
-    methods: ['GET', 'POST'], // Métodos HTTP permitidos
-    credentials: true, // Permita cookies, se necessário
+    origin: 'http://localhost:4200',
+    methods: ['GET', 'POST'],
+    credentials: true,
   },
 })
-export class HeatExchangerGateway implements OnGatewayInit {
+export class HeatExchangerGateway implements OnGatewayInit, OnModuleDestroy {
   @WebSocketServer()
   server: Server;
 
+  private readonly logger = new Logger(HeatExchangerGateway.name);
   private interval: NodeJS.Timeout;
 
-  afterInit() {
-    console.log('WebSocket Gateway Initialized');
+  constructor(private readonly heatExchangerService: HeatExchangerService) {}
+
+  afterInit(): void {
+    this.logger.log('WebSocket Gateway inicializado.');
     this.startSensorEmulation();
   }
 
-  private startSensorEmulation() {
+  onModuleDestroy(): void {
+    this.clearSensorEmulation();
+    this.logger.log('WebSocket Gateway destruído.');
+  }
+
+  private startSensorEmulation(): void {
+    // this.logger.log('Iniciando emulação de sensores...');
     this.interval = setInterval(() => {
       const sensorData = {
-        temperature: (Math.random() * 30 + 10).toFixed(2), // Temperatura aleatória
-        humidity: (Math.random() * 50 + 20).toFixed(2), // Umidade aleatória
-        timestamp: new Date().toISOString(), // Data/hora atual
+        temperature: (Math.random() * 30 + 10).toFixed(2),
+        humidity: (Math.random() * 50 + 20).toFixed(2),
+        timestamp: new Date().toISOString(),
       };
 
-      console.log('Emitting sensor data:', sensorData); // Log dos dados enviados
       this.server.emit('sensor-data', sensorData);
-    }, 2000); // Emitir dados a cada 2 segundos
+      // this.logger.debug(`Sensor data emitido: ${JSON.stringify(sensorData)}`);
+    }, 2000);
+  }
+
+  private clearSensorEmulation(): void {
+    if (this.interval) {
+      clearInterval(this.interval);
+      // this.logger.log('Emulação de sensores encerrada.');
+    }
+  }
+
+  @SubscribeMessage('calculate-heat-exchanger')
+  handleCalculateHeatExchanger(
+    @MessageBody() data: CalculateHeatExchangerDto,
+    @ConnectedSocket() client: Socket,
+  ): void {
+    // this.logger.log('Mensagem recebida para cálculo de trocador de calor.');
+    // this.logger.debug(`Dados recebidos: ${JSON.stringify(data)}`);
+
+    const result = this.heatExchangerService.calculate(data);
+
+    client.emit('calculation-result', result);
+
+    // this.logger.debug(`Resultado enviado de volta para o cliente: ${result}`);
   }
 }
