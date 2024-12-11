@@ -25,6 +25,8 @@ services:
       - db
     links:
       - db
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   db:
     image: postgres:15
@@ -38,6 +40,17 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./.docker/postgres:/docker-entrypoint-initdb.d # Scripts para initdb
+  
+  # llama-service:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.llama
+  #   ports:
+  #     - "11434:11434"  # Mapeie a porta usada pelo Ollama (se necessário)
+  #   volumes:
+  #     - ollama:/root/.ollama
+  #   restart: unless-stopped
 
 volumes:
   postgres_data:
+  # ollama:

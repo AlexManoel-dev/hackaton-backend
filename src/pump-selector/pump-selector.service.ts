@@ -4,7 +4,7 @@ import { Readable } from 'stream';
 
 @Injectable()
 export class PumpSelectorService {
-  private readonly apiUrl = 'http://localhost:11434/api/generate';
+  private readonly apiUrl = 'http://host.docker.internal:11434/api/generate';
 
   async *streamResponse(prompt: string): AsyncGenerator<string, void, void> {
     // Requisição para a API
