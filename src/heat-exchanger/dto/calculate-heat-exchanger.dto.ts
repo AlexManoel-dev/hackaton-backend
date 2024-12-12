@@ -10,4 +10,7 @@ export class CalculateHeatExchangerDto {
   T_cold_in: number;
   T_cold_out: number;
   flowType: LmtdEnum;
+  hotInFluid: any;
+  coldInFluid: any;
+  scale: 'K' | 'C' | 'F';
 }

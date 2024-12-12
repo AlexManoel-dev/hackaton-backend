@@ -41,15 +41,16 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./.docker/postgres:/docker-entrypoint-initdb.d # Scripts para initdb
   
-  # llama-service:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile.llama
+  # ollama:
+  #   image: ollama/ollama
+  #   container_name: ollama
   #   ports:
-  #     - "11434:11434"  # Mapeie a porta usada pelo Ollama (se necessário)
+  #     - "11434:11434"
   #   volumes:
   #     - ollama:/root/.ollama
-  #   restart: unless-stopped
+  #     - ./entrypoint.sh:/entrypoint.sh
+  #   restart: always
+  #   entrypoint: ["sh", "/entrypoint.sh"]
 
 volumes:
   postgres_data:

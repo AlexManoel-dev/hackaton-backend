@@ -8,17 +8,51 @@ export class HeatExchangerService {
     return 2 * Math.PI * radius * pipeLength * pipeQtd;
   }
 
+  private fahrenheitToCelsius(fah) {
+    return (fah - 32) / 1.8;
+  }
+
   calculate(payload: CalculateHeatExchangerDto) {
-    return (
-      payload.coeficient *
-      this.area(payload.radius, payload.pipeLength, payload.pipeQtd) *
-      calculateLMTD(
-        payload.T_hot_in,
-        payload.T_hot_out,
-        payload.T_cold_in,
-        payload.T_cold_out,
-        payload.flowType,
-      )
-    );
+    console.log('payload', payload);
+
+    const transferredHeat =
+      payload.scale === 'F'
+        ? payload.coeficient *
+          this.area(payload.radius / 100, payload.pipeLength, payload.pipeQtd) *
+          calculateLMTD(
+            this.fahrenheitToCelsius(payload.T_hot_in),
+            this.fahrenheitToCelsius(payload.T_hot_out),
+            this.fahrenheitToCelsius(payload.T_cold_in),
+            this.fahrenheitToCelsius(payload.T_cold_out),
+            payload.flowType,
+          )
+        : payload.coeficient *
+          this.area(payload.radius / 100, payload.pipeLength, payload.pipeQtd) *
+          calculateLMTD(
+            payload.T_hot_in,
+            payload.T_hot_out,
+            payload.T_cold_in,
+            payload.T_cold_out,
+            payload.flowType,
+          );
+
+    return {
+      transferredHeat,
+      area: this.area(
+        payload.radius / 100,
+        payload.pipeLength,
+        payload.pipeQtd,
+      ),
+      hotFlow: Math.abs(
+        ((payload.T_hot_in - payload.T_hot_out) *
+          payload.hotInFluid.specific_heat) /
+          transferredHeat,
+      ),
+      coldFlow: Math.abs(
+        ((payload.T_cold_in - payload.T_cold_out) *
+          payload.coldInFluid.specific_heat) /
+          transferredHeat,
+      ),
+    };
   }
 }

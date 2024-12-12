@@ -1,13 +1,11 @@
 #!/bin/sh
+# entrypoint.sh
 
-# Inicia o Ollama App no background
-ollama serve &
+# Iniciar o processo padrão
+/bin/ollama serve &
 
-# Espera o Ollama App iniciar
-sleep 5
+# Aguardar o serviço iniciar (ajustar o tempo conforme necessário)
+sleep 10
 
-# Baixa o modelo Llama3
-ollama pull llama3
-
-# Executa o modelo
-ollama run llama3
+# Executar o comando desejado após o serviço estar rodando
+ollama run llama3.2
